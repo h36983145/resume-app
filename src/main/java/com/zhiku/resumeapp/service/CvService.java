@@ -14,4 +14,6 @@ public interface CvService {
     void editBase(Cv cv);
 
     void editDesired(Cv cv);
+
+    void updateStatus(Cv cv);
 }

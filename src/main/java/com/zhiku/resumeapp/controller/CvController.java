@@ -45,4 +45,11 @@ public class CvController {
         cvService.editDesired(cv);
         return R.success();
     }
+
+    @PutMapping("/status")
+    public R updateStatus(@RequestBody Cv cv){
+        cvService.updateStatus(cv);
+        return R.success();
+    }
+
 }

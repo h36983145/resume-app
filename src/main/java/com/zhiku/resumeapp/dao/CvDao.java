@@ -28,4 +28,5 @@ public interface CvDao{
 
     void updateDesired(Cv cv);
 
+    void updateStatus(@Param("id") Integer id, @Param("status") int status);
 }

@@ -52,4 +52,10 @@ public class CvServiceImpl implements CvService {
     public void editDesired(Cv cv) {
         cvDao.updateDesired(cv);
     }
+
+    public void updateStatus(Cv cv){
+        int status = cv.getStatus()==1?1:0;
+        cvDao.updateStatus(cv.getId(), status);
+    }
+
 }
