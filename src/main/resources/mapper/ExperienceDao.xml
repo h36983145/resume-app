@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhiku.resumeapp.dao.ExperienceDao">
+
+<select id="selectCvIdLikeCompany" resultType="java.lang.Integer">
+    select  cv_id from experience where company like CONCAT('%',#{keywords},'%')
+    </select>
+
+<select id="selectByCvId" resultType="com.zhiku.resumeapp.entity.Experience">
+    select * from experience where cv_id = #{cvId};
+</select>
+
+    <update id="update">
+        update experience set
+            cv_id=#{cvId},
+            start_date=#{startDate},
+            end_date=#{endDate},
+            company=#{company},
+            industry=#{industry},
+            post=#{post},
+            salary=#{salary},
+            summarize=#{summarize},
+            reason=#{reason}
+        where id = #{id}
+    </update>
+
+    <insert id="insert">
+        insert into experience
+        (cv_id, start_date, end_date, company, industry, post, salary, summarize, reason)
+        values (#{cvId}, #{startDate}, #{endDate}, #{endDate}, #{industry}, #{post}, #{salary}, #{summarize}, #{reason})
+    </insert>
+
+    <delete id="deleteById">
+        delete from experience where id = #{id}
+    </delete>
+</mapper>

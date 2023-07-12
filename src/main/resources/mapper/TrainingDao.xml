@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhiku.resumeapp.dao.TrainingDao">
+
+
+    <select id="selectByCvId" resultType="com.zhiku.resumeapp.entity.Training">
+        select * from training where cv_id = #{cvId};
+    </select>
+
+    <delete id="deleteById">
+        delete from training where id = #{id}
+    </delete>
+
+    <insert id="insert">
+        insert into training(cv_id, start_date, end_date, name, summarize)
+        values (#{cvId},#{startDate},#{endDate},#{name},#{summarize})
+    </insert>
+
+    <update id="update">
+        update training set
+        cv_id=#{cvId},
+        start_date=#{startDate},
+        end_date=#{endDate},
+        name=#{name},
+        summarize=#{summarize}
+        where id = #{id}
+    </update>
+</mapper>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhiku.resumeapp.dao.EducationDao">
+
+    <select id="selectByCvId" resultType="com.zhiku.resumeapp.entity.Education">
+        select * from `education` where cv_id = #{cvId}
+    </select>
+
+    <delete id="deleteById">
+        delete from education where id = #{id}
+    </delete>
+
+    <insert id="insert">
+        insert into education(cv_id, start_date, end_date, academy, major, degree)
+            values (#{cvId},#{startDate},#{endDate},#{academy},#{major},#{degree})
+    </insert>
+
+    <update id="update">
+        update education set
+        cv_id=#{cvId},
+        start_date=#{startDate},
+        end_date=#{endDate},
+        academy=#{academy},
+        major=#{major},
+        degree=#{degree}
+        where id = #{id}
+    </update>
+</mapper>

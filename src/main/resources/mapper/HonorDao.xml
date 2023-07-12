@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhiku.resumeapp.dao.HonorDao">
+
+
+    <select id="selectByCvId" resultType="com.zhiku.resumeapp.entity.Honor">
+        select * from honor where cv_id = #{cvId};
+    </select>
+
+    <delete id="deleteById">
+        delete from honor where id = #{id}
+    </delete>
+    <insert id="insert">
+        insert into honor(cv_id, name, award_time, certificate_url)
+        values (#{cvId},#{name},#{awardTime},#{certificateUrl})
+    </insert>
+
+    <update id="update">
+        update honor set
+        cv_id=#{cvId},
+        name=#{name},
+        award_time=#{awardTime},
+        certificate_url=#{certificateUrl}
+        where id = #{id}
+    </update>
+</mapper>

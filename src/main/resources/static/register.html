@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>用户登录</title>
+    <script src="ele/vue.js"></script>
+    <link rel="stylesheet" href="ele/index.css" />
+    <link rel="stylesheet" href="css/info.css" />
+    <script src="ele/index.js"></script>
+    <script src="js/axios.js"></script>
+</head>
+<body>
+    <div id="app">
+        <el-form ref="loginForm" :model="form" :rules="rules" label-width="0px" class="login-box" label-position="right">
+            <h3 class="login-title">欢迎来到极简——用户注册</h3>
+            <div style="text-align: center;margin-bottom: 15px;"><span class="login-info"></span></div>
+            <el-descriptions  :column="1" border>
+                <el-descriptions-item label="用户名">
+                    <el-form-item prop="usname" size="small">
+                        <el-input v-model="form.usname" size="mini" ></el-input>
+                    </el-form-item>
+                </el-descriptions-item>
+                <el-descriptions-item label="密码">
+                    <el-form-item prop="psword" size="small">
+                        <el-input v-model="form.psword" size="mini"  show-password></el-input></el-form-item>
+                </el-descriptions-item>
+                <el-descriptions-item label="昵称">
+                    <el-form-item prop="petName" size="small">
+                    <el-input v-model="form.petName" size="mini" ></el-input></el-form-item>
+                </el-descriptions-item>
+                <el-descriptions-item label="手机">
+                    <el-form-item prop="mobile" size="small">
+                    <el-input v-model="form.mobile" size="mini" ></el-input></el-form-item>
+                </el-descriptions-item>
+                <el-descriptions-item label="邮箱">
+                    <el-form-item prop="email" size="small">
+                    <el-input v-model="form.email" size="mini" ></el-input></el-form-item>
+                </el-descriptions-item>
+                <el-descriptions-item label="头像">
+                    <span>
+                        <el-upload class="avatar-uploader" action="/uploadFile" :show-file-list="false"
+                            name="file" :on-success="handleAvatarSuccess"
+                            :before-upload="beforeAvatarUpload">
+                            <img v-if="form.avatarUrl" :src="form.avatarUrl" class="avatar">
+                            <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+                        </el-upload>
+                    </span>
+                </el-descriptions-item>
+            </el-descriptions>
+            <el-button class="login-sub" type="info" plain v-on:click="onSubmit('loginForm')">确 认 注 册</el-button>
+            <div class="t-right" style="margin-top: 10px;">
+                <el-link href="/index.html" type="info">返回登陆 </el-link> &nbsp;&nbsp;&nbsp;
+            </div>
+        </el-form>
+    </div>
+</body>
+<script type="text/javascript">
+    var test=new Vue({
+        el: '#app',
+        data: {
+            dialogVisible: false,
+            form: {
+                usname: '',
+                psword: '',
+                petName:'',
+                avatarUrl:'',
+                email:'',
+                mobile:''
+            },
+            // 表单验证，需要在 el-form-item 元素中增加 prop 属性
+            rules: {
+                usname: [
+                    { required: true, message: '账号不可为空', trigger: 'blur' },
+                    { min: 7, max: 16, message: '长度在 7 到 16 个字符', trigger: 'blur' }
+                ],
+                psword: [
+                    { required: true, message: '密码不可为空', trigger: 'blur' },
+                    { min: 7, max: 16, message: '长度在 7 到 16 个字符', trigger: 'blur' }
+                ],
+                petName: [
+                    { required: true, message: '昵称不可为空', trigger: 'blur' }
+                ],
+                mobile: [
+                    { required: true, message: '手机号不能为空', trigger: 'blur' },
+                    { min: 11, max: 11, message: '请输入正确的手机号', trigger: 'blur' }
+                ],
+                email: [
+                    { required: true, message: '邮箱地址不能为空', trigger: 'blur' },
+                    { type: 'email', message: '请输入正确的邮箱地址', trigger: ['blur', 'change'] }
+                ]
+            }
+        },
+        methods: {
+            onSubmit(formName) {
+                this.$refs[formName].validate((valid) => {
+                    if (valid) {
+                        // 为表单绑定验证功能
+                        let t = this;
+                        axios.post("/register", t.form).then(resp => {
+                            if (resp.data.code == 200) {
+                                window.location.href = "/";
+                            } else {
+                                t.$message.error(resp.data.message);
+                            }
+                        })
+                    } else {
+                        return false;
+                    }
+                });
+            },
+            handleAvatarSuccess(res, file) {
+                console.log(res);
+                this.form.avatarUrl = res.data;
+            },
+            beforeAvatarUpload(file) {
+                const isJPG = file.type === 'image/jpeg';
+                const isLt2M = file.size / 1024 / 1024 < 2;
+
+                if (!isJPG) {
+                    this.$message.error('上传图片只能是 JPG 格式!');
+                }
+                if (!isLt2M) {
+                    this.$message.error('上传图片大小不能超过 2MB!');
+                }
+
+                return isJPG && isLt2M;
+            }
+        }
+    })
+
+</script>
+
+</html>

@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>我的简历</title>
+    <script src="../ele/vue.js"></script>
+    <link rel="stylesheet" href="../ele/index.css"/>
+    <link rel="stylesheet" href="../css/info.css"/>
+    <script src="../ele/index.js"></script>
+    <script src="../js/axios.js"></script>
+    <script src="../js/wangEditor.min.js"></script>
+    <style>
+        .el-input__inner {
+            padding: 5px;
+        }
+
+        .inp-65 {
+            width: 65px;
+        }
+    </style>
+</head>
+
+<body>
+<div id="app">
+    <el-container>
+        <el-header height="180px">
+            <el-row type="flex" justify="center" align="middle" class="top">
+                <el-col :offset="2" :span="5" class="t-left">
+                    <el-image style="height: 40px" src="../image/logo.png"></el-image>
+                </el-col>
+                <el-col :span="8" class="t-center">
+                    <span class="t-wb t-12"></span>
+                </el-col>
+                <el-col :span="5" class="t-right">
+                    <el-dropdown @command="handleCommand">
+                        <span class="t-wb">欢迎 , {{member.petName}} </span>
+                        <el-dropdown-menu slot="dropdown">
+                            <el-dropdown-item>个人中心</el-dropdown-item>
+                            <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
+                        </el-dropdown-menu>
+                    </el-dropdown>
+                </el-col>
+                <el-col :span="3" class="t-left pd-l15">
+                    <el-avatar :size="25" src="../image/cc.jpg">
+                    </el-avatar>
+                </el-col>
+            </el-row>
+            <el-row type="flex" justify="center" align="middle" class="search">
+                <el-col :span="16" class="t-center">
+                    <el-input placeholder="请输入搜索内容" v-model="key" class="input-with-select search-inp">
+                        <el-button slot="append" type="warning" plain @click="searchKey()">搜索</el-button>
+                    </el-input>
+                </el-col>
+                <el-col :span="8" class="t-center">
+                    <el-avatar shape="square" :size="100" src="../image/zk.png"></el-avatar>
+                </el-col>
+            </el-row>
+        </el-header>
+        <el-container>
+            <el-aside width="65%">
+                <!-- 基本信息 -->
+                <template v-if="!cvBaseVisible">
+                    <div class="cv-title">
+                        <el-descriptions title="基本信息" :column="5" border>
+                            <template slot="extra">
+                                <span>公开简历状态：</span>
+                                <span v-if="cv_base.status==0">私密</span>
+                                <span v-if="cv_base.status==1">公开</span>
+                                <el-switch
+                                        @change="changeStatus"
+                                        v-model="cv_base.status"
+                                        active-color="#13ce66"
+                                        active-value="1"
+                                        inactive-value="0"
+                                        inactive-color="#ff4949">
+                                </el-switch>
+                                <el-button type="primary" size="mini" @click="cvBaseVisible=!cvBaseVisible">编辑
+                                </el-button>
+                            </template>
+                            <el-descriptions-item label="姓名">{{cv_base.name}}</el-descriptions-item>
+                            <el-descriptions-item label="性别">{{cv_base.gender==0?'女':'男'}}</el-descriptions-item>
+                            <el-descriptions-item label="年龄">{{getAge(cv_base.birthday)}}</el-descriptions-item>
+                            <el-descriptions-item label="民族">{{cv_base.nation}}</el-descriptions-item>
+                            <el-descriptions-item label="政治面貌">
+                                <span v-if="cv_base.politicsStatus=='13'">群众</span>
+                                <span v-if="cv_base.politicsStatus=='1'">党员</span>
+                                <span v-if="cv_base.politicsStatus=='3'">共青团员</span>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="婚姻">
+                                <span v-if="cv_base.maritalStatus=='0'">未婚</span>
+                                <span v-if="cv_base.maritalStatus=='1'">已婚</span>
+                                <span v-if="cv_base.maritalStatus=='2'">离异</span>
+                                <span v-if="cv_base.maritalStatus=='3'">丧偶</span>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="学历">{{cv_base.degree}}</el-descriptions-item>
+                            <el-descriptions-item label="专业">{{cv_base.major}}</el-descriptions-item>
+                            <el-descriptions-item label="毕业院校">{{cv_base.academy}}</el-descriptions-item>
+                        </el-descriptions>
+                    </div>
+                    <div class="cv-inf1">
+                        <el-descriptions :column="2" border>
+                            <el-descriptions-item label="联系电话">{{cv_base.mobile}}</el-descriptions-item>
+                            <el-descriptions-item label="联系邮箱">{{cv_base.email}}</el-descriptions-item>
+                            <el-descriptions-item label="现居地址">{{cv_base.address}}</el-descriptions-item>
+                        </el-descriptions>
+                    </div>
+                </template>
+                <template v-else>
+                    <!-- 基本信息 修改  -->
+                    <div class="cv-title">
+                        <el-descriptions title="基本信息" :column="3" border>
+                            <template slot="extra">
+                                <el-button type="success" size="mini" @click="cvBaseVisible=!cvBaseVisible">取消
+                                </el-button>
+                                <el-button type="danger" size="mini" @click="saveBase()">保存</el-button>
+                            </template>
+                            <el-descriptions-item label="姓名">
+                                <el-input v-model="cv_base.name" size="mini" class="inp-65"></el-input>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="性别">
+                                <el-select v-model="cv_base.gender" placeholder="请选择" size="mini" class="inp-65">
+                                    <el-option key="0" value="0" label="女"></el-option>
+                                    <el-option key="1" value="1" label="男"></el-option>
+                                </el-select>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="年龄(生日)">
+                                <el-date-picker size="mini" v-model="cv_base.birthday" class="inp-65" type="date"
+                                                value-format="yyyy-MM-dd" format="yyyy-MM-dd" placeholder="选择日期">
+                                </el-date-picker>
+                            </el-descriptions-item>
+
+                            <el-descriptions-item label="政治面貌">
+                                <el-select v-model="cv_base.politicsStatus" placeholder="请选择" size="mini"
+                                           class="inp-65">
+                                    <el-option key="13" value="13" label="群众"></el-option>
+                                    <el-option key="1" value="1" label="党员"></el-option>
+                                    <el-option key="3" value="3" label="团员"></el-option>
+                                </el-select>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="民族">
+                                <el-input v-model="cv_base.nation" size="mini" class="inp-65"></el-input>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="专业">
+                                <el-input v-model="cv_base.major" size="mini" style="width: 220px;"></el-input>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="婚姻">
+                                <el-select v-model="cv_base.maritalStatus" placeholder="请选择" size="mini"
+                                           class="inp-65">
+                                    <el-option key="0" value="0" label="未婚"></el-option>
+                                    <el-option key="1" value="1" label="已婚"></el-option>
+                                    <el-option key="2" value="2" label="离异"></el-option>
+                                    <el-option key="3" value="3" label="丧偶"></el-option>
+                                </el-select>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="学历">
+                                <el-input v-model="cv_base.degree" size="mini" class="inp-65"></el-input>
+                            </el-descriptions-item>
+
+                            <el-descriptions-item label="毕业院校">
+                                <el-input v-model="cv_base.academy" size="mini" style="width: 220px;"></el-input>
+                            </el-descriptions-item>
+                        </el-descriptions>
+                    </div>
+                    <div class="cv-inf1">
+                        <el-descriptions :column="2" border>
+                            <el-descriptions-item label="联系电话">
+                                <el-input v-model="cv_base.mobile" size="mini" style="width: 173px;"></el-input>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="联系邮箱">
+                                <el-input v-model="cv_base.email" size="mini" style="width: 173px;"></el-input>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="现居地址">
+                                <el-input v-model="cv_base.address" size="mini" style="width: 567px;"></el-input>
+                            </el-descriptions-item>
+                        </el-descriptions>
+                    </div>
+                </template>
+                <!-- 期望信息 -->
+                <template v-if="!cvDesiredVisible">
+                    <div class="cv-inf1" style="margin-top: 15px;">
+                        <el-descriptions title="职位期望" :column="3" border>
+                            <template slot="extra">
+                                <el-button type="primary" size="mini" @click="cvDesiredVisible=!cvDesiredVisible">编辑
+                                </el-button>
+                            </template>
+                            <el-descriptions-item label="求职状态">
+                                <span v-if="cv_desired.desiredStatus=='0'">全职</span>
+                                <span v-if="cv_desired.desiredStatus=='1'">兼职</span>
+                                <span v-if="cv_desired.desiredStatus=='2'">全职/兼职</span>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="求职方向">{{cv_desired.desiredDirection}}
+                            </el-descriptions-item>
+                            <el-descriptions-item label="期望薪资">{{cv_desired.desiredSalary}}</el-descriptions-item>
+                            <el-descriptions-item label="期望工作地">{{cv_desired.desiredPlace}}</el-descriptions-item>
+                        </el-descriptions>
+                    </div>
+                </template>
+                <template v-else>
+                    <!-- 期望信息 修改-->
+                    <div class="cv-inf1" style="margin-top: 15px;">
+                        <el-descriptions title="职位期望" :column="3" border>
+                            <template slot="extra">
+                                <el-button type="success" size="mini" @click="cvDesiredVisible=!cvDesiredVisible">取消
+                                </el-button>
+                                <el-button type="danger" size="mini" @click="saveDesired()">保存</el-button>
+                            </template>
+                            <el-descriptions-item label="求职状态">
+                                <el-select v-model="cv_desired.desiredStatus" placeholder="请选择" size="mini"
+                                           style="width: 120px;">
+                                    <el-option key="0" value="0" label="全职"></el-option>
+                                    <el-option key="1" value="1" label="兼职"></el-option>
+                                    <el-option key="2" value="2" label="全职/兼职"></el-option>
+                                </el-select>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="求职方向">
+                                <el-input v-model="cv_desired.desiredDirection" size="mini" style="width: 120px;">
+                                </el-input>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="期望薪资">
+                                <!-- 期望薪资 数据库单位分 填写单位元 -->
+                                <el-input v-model="cv_desired.desiredSalary" size="mini" style="width: 120px;"
+                                          type="number">
+                                </el-input>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="期望工作地">
+                                <el-input v-model="cv_desired.desiredPlace" size="mini" style="width: 600px;">
+                                </el-input>
+                            </el-descriptions-item>
+                        </el-descriptions>
+                    </div>
+                </template>
+                <!-- 工作经历 -->
+                <template>
+                    <div class="cv-title">
+                        <el-descriptions title="工作经历" :column="1">
+                            <template slot="extra">
+                                <el-button type="warning" size="mini" @click="openExpIn()">添加
+                                </el-button>
+                            </template>
+                        </el-descriptions>
+                        <el-collapse v-model="expActive" @change="handleChange" :accordion="true">
+                            <el-collapse-item :name="index" :key="index" v-for="(item,index) in cv_exp">
+                                <template slot="title" class="t-14">
+                                    <span class="t-bb">{{item.company}}</span>
+                                    <span class="t-bb t-12">&nbsp;&nbsp;&nbsp;{{item.startDate}} 至
+                                            {{item.endDate}}</span>
+                                </template>
+                                <el-descriptions :column="3">
+                                    <el-descriptions-item label="所属行业">{{item.industry}}</el-descriptions-item>
+                                    <el-descriptions-item label="职位名称">{{item.post}}</el-descriptions-item>
+                                    <el-descriptions-item label="薪资水平">{{item.salary}}</el-descriptions-item>
+                                </el-descriptions>
+                                <div style="word-break:break-all">
+                                    <span class="t-bb">工作内容：</span><br>
+                                    <span>{{item.summarize}}</span>
+                                </div>
+                                <div style="padding-top: 5px;word-break:break-all">
+                                    <span class="t-bb">离职原因：</span><br>
+                                    <span>{{item.reason}}</span>
+                                </div>
+                                <el-row type="flex" justify="center" align="middle">
+                                    <el-col :span="24" class="t-right">
+                                        <el-button type="danger" size="mini"
+                                                   @click="deleteInfo('/experience',item.id)">删除
+                                        </el-button>
+                                        <el-button type="primary" size="mini" @click="openExpUp(item)">编辑
+                                        </el-button>
+                                    </el-col>
+                                </el-row>
+                            </el-collapse-item>
+                        </el-collapse>
+                    </div>
+                </template>
+                <template>
+                    <el-dialog title="工作经历" :visible.sync="cvExpVisible">
+                        <el-descriptions :column="2" border>
+                            <el-descriptions-item label="公司名称">
+                                <el-input v-model="fm_exp.company" size="mini">
+                                </el-input>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="所属行业">
+                                <el-input v-model="fm_exp.industry" size="mini">
+                                </el-input>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="职位名称">
+                                <el-input v-model="fm_exp.post" size="mini">
+                                </el-input>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="薪资水平">
+                                <el-input v-model="fm_exp.salary" size="mini" type="number">
+                                </el-input>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="入职时间">
+                                <el-date-picker size="mini" v-model="fm_exp.startDate" type="date"
+                                                value-format="yyyy-MM-dd" format="yyyy-MM-dd" placeholder="选择日期">
+                                </el-date-picker>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="离职时间">
+                                <el-date-picker size="mini" v-model="fm_exp.endDate" type="date"
+                                                value-format="yyyy-MM-dd" format="yyyy-MM-dd" placeholder="选择日期">
+                                </el-date-picker>
+                            </el-descriptions-item>
+                        </el-descriptions>
+                        <div style="padding-top: 5px;word-break:break-all">
+                            <span class="t-bb">工作内容：</span><br>
+                            <span>
+                                    <el-input style="padding-top: 5px;" v-model="fm_exp.summarize" type="textarea">
+                                        </el-input>
+                                </span>
+                        </div>
+                        <div style="padding-top: 5px;word-break:break-all">
+                            <span class="t-bb">离职原因：</span><br>
+                            <span>
+                                    <el-input style="padding-top: 5px;" v-model="fm_exp.reason" type="textarea">
+                                        </el-input>
+                                </span>
+                        </div>
+                        <span slot="footer" class="dialog-footer">
+                                <el-button @click="cvExpVisible = false">取 消</el-button>
+                                <el-button type="primary" @click="saveExp()">确 定</el-button>
+                            </span>
+                    </el-dialog>
+                </template>
+                <!-- 项目经验 -->
+                <template>
+                    <div class="cv-title">
+                        <el-descriptions title="项目经验" :column="1">
+                            <template slot="extra">
+                                <el-button type="warning" size="mini" @click="openProIn()">添加</el-button>
+                            </template>
+                        </el-descriptions>
+                        <el-collapse v-model="proActive" @change="handleChange" :accordion="true">
+                            <el-collapse-item :name="index" :key="index" v-for="(item,index) in cv_pro">
+                                <template slot="title" class="t-14">
+                                    <span class="t-bb">{{item.name}}</span>
+                                    <span class="t-bb t-12">&nbsp;&nbsp;&nbsp;{{item.startDate}} 至
+                                            {{item.endDate}}</span>
+                                </template>
+                                <div style="word-break:break-all">
+                                    <span class="t-bb">项目描述：</span><br>
+                                    <span>{{item.describe}}</span>
+                                </div>
+                                <el-row type="flex" justify="center" align="middle">
+                                    <el-col :span="24" class="t-right">
+                                        <el-button type="danger" size="mini"
+                                                   @click="deleteInfo('/project',item.id)">删除
+                                        </el-button>
+                                        <el-button type="primary" size="mini" @click="openProUp(item)">编辑
+                                        </el-button>
+                                    </el-col>
+                                </el-row>
+                            </el-collapse-item>
+                        </el-collapse>
+                    </div>
+                </template>
+                <template>
+                    <el-dialog title="项目经历" :visible.sync="cvProVisible">
+                        <el-descriptions :column="2" border>
+                            <el-descriptions-item label="参与时间">
+                                <el-date-picker size="mini" v-model="fm_pro.startDate" type="date"
+                                                value-format="yyyy-MM-dd" format="yyyy-MM-dd" placeholder="选择日期">
+                                </el-date-picker>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="结束时间">
+                                <el-date-picker size="mini" v-model="fm_pro.endDate" type="date"
+                                                value-format="yyyy-MM-dd" format="yyyy-MM-dd" placeholder="选择日期">
+                                </el-date-picker>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="项目名称">
+                                <el-input v-model="fm_pro.name" size="mini">
+                                </el-input>
+                            </el-descriptions-item>
+                        </el-descriptions>
+                        <div style="padding-top: 5px;word-break:break-all">
+                            <span class="t-bb">项目内容：</span><br>
+                            <span>
+                                    <el-input style="padding-top: 5px;" v-model="fm_pro.describe" type="textarea">
+                                        </el-input>
+                                </span>
+                        </div>
+                        <span slot="footer" class="dialog-footer">
+                                <el-button @click="cvProVisible = false">取 消</el-button>
+                                <el-button type="primary" @click="savePro()">确 定</el-button>
+                            </span>
+                    </el-dialog>
+                </template>
+                <!-- 教育经历 -->
+                <template>
+                    <div class="cv-title">
+                        <el-descriptions title="教育经历" :column="1">
+                            <template slot="extra">
+                                <el-button type="warning" size="mini" @click="openEduIn()">添加</el-button>
+                            </template>
+                        </el-descriptions>
+                        <el-collapse v-model="eduActive" @change="handleChange" :accordion="true">
+                            <el-collapse-item :name="index" :key="index" v-for="(item,index) in cv_edu">
+                                <template slot="title" class="t-14">
+                                    <span class="t-bb">{{item.academy}}</span>
+                                </template>
+                                <el-descriptions :column="2">
+                                    <el-descriptions-item label="入学时间">{{item.startDate}}</el-descriptions-item>
+                                    <el-descriptions-item label="毕业时间">{{item.endDate}}</el-descriptions-item>
+                                    <el-descriptions-item label="专业">{{item.major}}</el-descriptions-item>
+                                    <el-descriptions-item label="学历">{{item.degree}}</el-descriptions-item>
+                                </el-descriptions>
+                                <el-row type="flex" justify="center" align="middle">
+                                    <el-col :span="24" class="t-right">
+                                        <el-button type="danger" size="mini"
+                                                   @click="deleteInfo('/education',item.id)">删除
+                                        </el-button>
+                                        <el-button type="primary" size="mini" @click="openEduUp(item)">编辑
+                                        </el-button>
+                                    </el-col>
+                                </el-row>
+                            </el-collapse-item>
+                        </el-collapse>
+                    </div>
+                </template>
+                <template>
+                    <el-dialog title="教育经历" :visible.sync="cvEduVisible">
+                        <el-descriptions :column="3" border>
+                            <el-descriptions-item label="学校">
+                                <el-input v-model="fm_edu.academy" size="mini">
+                                </el-input>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="专业">
+                                <el-input v-model="fm_edu.major" size="mini">
+                                </el-input>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="学历">
+                                <el-input v-model="fm_edu.degree" size="mini">
+                                </el-input>
+                            </el-descriptions-item>
+                        </el-descriptions>
+                        <el-descriptions :column="2" border style="margin-top:5px;">
+                            <el-descriptions-item label="入学时间">
+                                <el-date-picker size="mini" v-model="fm_edu.startDate" type="date"
+                                                value-format="yyyy-MM-dd" format="yyyy-MM-dd" placeholder="选择日期">
+                                </el-date-picker>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="毕业时间">
+                                <el-date-picker size="mini" v-model="fm_edu.endDate" type="date"
+                                                value-format="yyyy-MM-dd" format="yyyy-MM-dd" placeholder="选择日期">
+                                </el-date-picker>
+                            </el-descriptions-item>
+                        </el-descriptions>
+                        <span slot="footer" class="dialog-footer">
+                                <el-button @click="cvEduVisible = false">取 消</el-button>
+                                <el-button type="primary" @click="saveEdu()">确 定</el-button>
+                            </span>
+                    </el-dialog>
+                </template>
+                <!-- 培训经历 -->
+                <template>
+                    <div class="cv-title">
+                        <el-descriptions title="培训经历" :column="1">
+                            <template slot="extra">
+                                <el-button type="warning" size="mini" @click="openTraIn()">添加</el-button>
+                            </template>
+                        </el-descriptions>
+                        <el-collapse v-model="traActive" @change="handleChange" :accordion="true">
+                            <el-collapse-item :name="index" :key="index" v-for="(item,index) in cv_tra">
+                                <template slot="title" class="t-14">
+                                        <span class="t-bb">
+                                            {{item.name}}
+                                        </span>
+                                </template>
+                                <el-descriptions :column="2">
+                                    <el-descriptions-item label="参训时间">{{item.startDate}}</el-descriptions-item>
+                                    <el-descriptions-item label="结束时间">{{item.endDate}}</el-descriptions-item>
+                                </el-descriptions>
+                                <div style="word-break:break-all">
+                                    <span class="t-bb">培训概述：</span><br>
+                                    <span>{{item.summarize}}</span>
+                                </div>
+                                <el-row type="flex" justify="center" align="middle">
+                                    <el-col :span="24" class="t-right">
+                                        <el-button type="danger" size="mini"
+                                                   @click="deleteInfo('/training',item.id)">删除
+                                        </el-button>
+                                        <el-button type="primary" size="mini" @click="openTraUp(item)">编辑
+                                        </el-button>
+                                    </el-col>
+                                </el-row>
+                            </el-collapse-item>
+                        </el-collapse>
+                    </div>
+                </template>
+                <template>
+                    <el-dialog title="培训经历" :visible.sync="cvTraVisible">
+                        <el-descriptions :column="2" border>
+                            <el-descriptions-item label="参训时间">
+                                <el-date-picker size="mini" v-model="fm_tra.startDate" type="date"
+                                                value-format="yyyy-MM-dd" format="yyyy-MM-dd" placeholder="选择日期">
+                                </el-date-picker>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="结束时间">
+                                <el-date-picker size="mini" v-model="fm_tra.endDate" type="date"
+                                                value-format="yyyy-MM-dd" format="yyyy-MM-dd" placeholder="选择日期">
+                                </el-date-picker>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="培训项目">
+                                <el-input v-model="fm_tra.name" size="mini">
+                                </el-input>
+                            </el-descriptions-item>
+                        </el-descriptions>
+                        <div style="padding-top: 5px;word-break:break-all">
+                            <span class="t-bb">项目内容：</span><br>
+                            <span>
+                                    <el-input style="padding-top: 5px;" v-model="fm_tra.summarize" type="textarea">
+                                        </el-input>
+                                </span>
+                        </div>
+                        <span slot="footer" class="dialog-footer">
+                                <el-button @click="cvTraVisible = false">取 消</el-button>
+                                <el-button type="primary" @click="saveTra()">确 定</el-button>
+                            </span>
+                    </el-dialog>
+                </template>
+                <!-- 荣誉经历 -->
+                <template>
+                    <div class="cv-title">
+                        <el-descriptions title="荣誉经历" :column="1">
+                            <template slot="extra">
+                                <el-button type="warning" size="mini" @click="openHonIn()">添加</el-button>
+                            </template>
+                        </el-descriptions>
+                        <el-collapse v-model="honActive" @change="handleChange" :accordion="true">
+                            <el-collapse-item :name="index" :key="index" v-for="(item,index) in cv_hon">
+                                <template slot="title" class="t-14">
+                                        <span class="t-bb">
+                                            {{item.name}}
+                                        </span>
+                                </template>
+                                <el-descriptions :column="2">
+                                    <el-descriptions-item label="获得时间">{{item.awardTime}}</el-descriptions-item>
+                                </el-descriptions>
+                                <div style="word-break:break-all">
+                                    <span class="t-bb">荣誉证书：</span><br>
+                                    <el-image :src="item.certificateUrl"></el-image>
+                                </div>
+                                <el-row type="flex" justify="center" align="middle">
+                                    <el-col :span="24" class="t-right">
+                                        <el-button type="danger" size="mini" @click="deleteInfo('/honor',item.id)">
+                                            删除
+                                        </el-button>
+                                        <el-button type="primary" size="mini" @click="openHonUp(item)">编辑
+                                        </el-button>
+                                    </el-col>
+                                </el-row>
+                            </el-collapse-item>
+                        </el-collapse>
+                    </div>
+                </template>
+                <template>
+                    <el-dialog title="我得荣誉" :visible.sync="cvHonVisible">
+                        <el-descriptions :column="2" border>
+                            <el-descriptions-item label="荣誉">
+                                <el-input v-model="fm_hon.name" size="mini">
+                                </el-input>
+                            </el-descriptions-item>
+                            <el-descriptions-item label="获得时间">
+                                <el-date-picker size="mini" v-model="fm_hon.awardTime" type="date"
+                                                value-format="yyyy-MM-dd" format="yyyy-MM-dd" placeholder="选择日期">
+                                </el-date-picker>
+                            </el-descriptions-item>
+                        </el-descriptions>
+                        <div style="padding-top: 5px;word-break:break-all">
+                            <span class="t-bb">荣誉证书：</span><br>
+                            <span>
+                                    <el-upload class="avatar-uploader" action="/uploadFile" :show-file-list="false"
+                                               name="file" :on-success="handleAvatarSuccess"
+                                               :before-upload="beforeAvatarUpload">
+                                        <img v-if="fm_hon.certificateUrl" :src="fm_hon.certificateUrl" class="avatar">
+                                        <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+                                    </el-upload>
+                                </span>
+                        </div>
+                        <span slot="footer" class="dialog-footer">
+                                <el-button @click="cvHonVisible = false">取 消</el-button>
+                                <el-button type="primary" @click="saveHon()">确 定</el-button>
+                            </span>
+                    </el-dialog>
+                </template>
+            </el-aside>
+            <el-main>
+                <!-- 待完善项 -->
+                <template>
+                    <el-row type="flex" justify="center" align="middle" class="ws-top" style="margin-top: 0;">
+                        <el-col :span="24" class="t-left">
+                            <span class="t-18 t-bb">简历完整程度</span>
+                        </el-col>
+                    </el-row>
+                    <el-row type="flex" justify="center" align="middle" class="ws-lig">
+                        <el-col :span="24" class="t-left">
+                            <span>持续优化简历 ，获更强职场竞争力</span>
+                        </el-col>
+                    </el-row>
+                    <el-row type="flex" justify="center" align="middle" class="ws-lig">
+                        <el-col :span="22" class="t-center">
+                            <el-slider v-model="complete" disabled></el-slider>
+                        </el-col>
+                        <el-col :span="2" class="t-center">
+                            {{complete}}%
+                        </el-col>
+                    </el-row>
+                </template>
+                <template>
+                    <el-row type="flex" justify="center" align="middle" class="ws-top">
+                        <el-col :span="24" class="t-left">
+                            <span class="t-18 t-bb">简历待完善项</span>
+                        </el-col>
+                    </el-row>
+                    <el-row type="flex" justify="center" align="middle" class="ws-right">
+                        <el-col :span="24" class="t-left">
+                            <span>完善简历获得更强竞争力</span>
+                        </el-col>
+                    </el-row>
+                    <template>
+                        <el-row type="flex" justify="center" align="middle" class="ws-left">
+                            <el-col :span="24" class="t-left t-bb">
+                                <span>基本信息</span>
+                            </el-col>
+                        </el-row>
+                        <el-row type="flex" justify="center" align="middle" class="ws-right">
+                            <el-col :span="20" class="t-left">
+                                <span>待完善字段：<span style="color: #F56C6C;">2项</span></span>
+                            </el-col>
+                            <el-col :span="4" class="t-right">
+                                <el-link type="warning" class="t-10">去补充 &gt;</el-link>
+                            </el-col>
+                        </el-row>
+                    </template>
+                    <template>
+                        <el-row type="flex" justify="center" align="middle" class="ws-left">
+                            <el-col :span="24" class="t-left t-bb">
+                                <span>求职意向</span>
+                            </el-col>
+                        </el-row>
+                        <el-row type="flex" justify="center" align="middle" class="ws-right">
+                            <el-col :span="20" class="t-left">
+                                <span>待完善字段：<span style="color: #F56C6C;">2项</span></span>
+                            </el-col>
+                            <el-col :span="4" class="t-right">
+                                <el-link type="warning" class="t-10">去补充 &gt;</el-link>
+                            </el-col>
+                        </el-row>
+                    </template>
+                    <!-- 隐私管理 -->
+                    <template>
+                        <el-row type="flex" justify="center" align="middle" class="ws-left">
+                            <el-col :span="24" class="t-left t-bb">
+                                <span>工作经历</span>
+                            </el-col>
+                        </el-row>
+                        <el-row type="flex" justify="center" align="middle" class="ws-right">
+                            <el-col :span="20" class="t-left">
+                                <span>待完善字段：<span style="color: #F56C6C;">2项</span></span>
+                            </el-col>
+                            <el-col :span="4" class="t-right">
+                                <el-link type="warning" class="t-10">去补充 &gt;</el-link>
+                            </el-col>
+                        </el-row>
+                    </template>
+                    <template>
+                        <el-row type="flex" justify="center" align="middle" class="ws-left">
+                            <el-col :span="24" class="t-left t-bb">
+                                <span>培训经历</span>
+                            </el-col>
+                        </el-row>
+                        <el-row type="flex" justify="center" align="middle" class="ws-right">
+                            <el-col :span="20" class="t-left">
+                                <span>未填写</span>
+                            </el-col>
+                            <el-col :span="4" class="t-right">
+                                <el-link type="warning" class="t-10">去补充 &gt;</el-link>
+                            </el-col>
+                        </el-row>
+                    </template>
+                </template>
+                <template>
+                    <el-row type="flex" justify="center" align="middle" class="ys-top">
+                        <el-col :span="24" class="t-left">
+                            <span class="t-18 t-bb">隐私设置</span>
+                        </el-col>
+                        <el-col :span="4" class="t-right">
+                            <el-button type="info" plain size="mini">编辑</el-button>
+                        </el-col>
+                    </el-row>
+                    <el-row type="flex" justify="center" align="middle" class="ys-inf">
+                        <el-col :span="20" class="t-left">
+                            <span>谁能查看我的简历</span>
+                        </el-col>
+                        <el-col :span="4" class="t-right">
+                            <span>所有人</span>
+                        </el-col>
+                    </el-row>
+                    <el-row type="flex" justify="center" align="middle" class="ys-inf">
+                        <el-col :span="20" class="t-left">
+                            <span>手机号码保护</span>
+                        </el-col>
+                        <el-col :span="4" class="t-right">
+                            <span>已开启</span>
+                        </el-col>
+                    </el-row>
+                    <el-row type="flex" justify="center" align="middle" class="ys-inf">
+                        <el-col :span="20" class="t-left">
+                            <span>公开自荐信</span>
+                        </el-col>
+                        <el-col :span="4" class="t-right">
+                            <span>未公开</span>
+                        </el-col>
+                    </el-row>
+                </template>
+            </el-main>
+        </el-container>
+    </el-container>
+    <div style="height:300px;"></div>
+</div>
+
+</body>
+<script type="text/javascript">
+    var test = new Vue({
+        el: '#app',
+        data: {
+            cvid: '',
+            search: "",
+            complete: 68,
+            expActive: [0],
+            proActive: [0],
+            eduActive: [0],
+            traActive: [0],
+            honActive: [0],
+            cvBaseVisible: false,
+            cvDesiredVisible: false,
+            cvExpVisible: false,
+            cvEduVisible: false,
+            cvProVisible: false,
+            cvTraVisible: false,
+            cvHonVisible: false,
+            cvRecVisible: false,
+            cv_base: {},
+            cv_desired: {},
+            cv_exp: [],
+            fm_exp: {
+                company: '',
+                industry: '',
+                post: '',
+                salary: '',
+                summarize: '',
+                reason: '',
+                startDate: '',
+                endDate: ''
+            },
+            cv_pro: [],
+            fm_pro: {
+                name: '',
+                describe: '',
+                startDate: '',
+                endDate: ''
+            },
+            cv_edu: [],
+            fm_edu: {
+                academy: '',
+                major: '',
+                degree: '',
+                startDate: '',
+                endDate: ''
+            },
+            key: '',
+            cv_tra: [],
+            fm_tra: {
+                startDate: '',
+                endDate: '',
+                name: '',
+                summarize: ''
+            },
+            cv_hon: [],
+            fm_hon: {
+                name: '',
+                awardTime: '',
+                certificateUrl: ''
+            },
+            fm_rec: {}
+        },
+        created() {
+            let member = sessionStorage.getItem("MEMBER");
+            if (!member) {
+                window.location.href = "/";
+            }
+            this.member = JSON.parse(member);
+            this.id = this.member.cvId;
+            this.getData();
+        },
+        methods: {
+            handleChange(val) {
+                console.log(val);
+            },
+            getData() {
+                let t = this;
+                let id = t.id;
+                axios.get("/cv/" + id).then(resp => {
+                    t.cv_base = resp.data.data;
+                    t.cvid = t.cv_base.id;
+                    t.cv_desired = resp.data.data;
+                    t.cv_desired.desiredSalary = t.cv_desired.desiredSalary / 100;
+                });
+                //获取工作经历
+                axios.get("/experience/cv/" + id).then(resp => {
+                    t.cv_exp = resp.data.rows;
+                });
+                //获取项目经验
+                axios.get("/project/cv/" + id).then(resp => {
+                    t.cv_pro = resp.data.rows;
+                });
+                //获取教育经历
+                axios.get("/education/cv/" + id).then(resp => {
+                    t.cv_edu = resp.data.rows;
+                });
+                //获取个人荣誉+获取培训经历
+                axios.get("/training/cv/" + id).then(resp => {
+                    t.cv_tra = resp.data.rows;
+                });
+                axios.get("/honor/cv/" + id).then(resp => {
+                    t.cv_hon = resp.data.rows;
+                });
+            },
+            // 工作
+            openExpIn() {
+                this.fm_exp = {
+                    company: '',
+                    industry: '',
+                    post: '',
+                    salary: '',
+                    summarize: '',
+                    reason: '',
+                    startDate: '',
+                    endDate: ''
+                };
+                this.cvExpVisible = true;
+            },
+            openExpUp(row) {
+                this.fm_exp = row;
+                this.cvExpVisible = true;
+            },
+            // 项目
+            openProIn() {
+                this.fm_pro = {
+                    name: '',
+                    describe: '',
+                    startDate: '',
+                    endDate: ''
+                };
+                this.cvProVisible = true;
+            },
+            openProUp(row) {
+                this.fm_pro = row;
+                this.cvProVisible = true;
+            },
+            // 教育
+            openEduIn() {
+                this.fm_edu = {
+                    academy: '',
+                    major: '',
+                    degree: '',
+                    startDate: '',
+                    endDate: ''
+                };
+                this.cvEduVisible = true;
+            },
+            openEduUp(row) {
+                this.fm_edu = row;
+                this.cvEduVisible = true;
+            },
+            // 培训
+            openTraIn() {
+                this.fm_tra = {
+                    startDate: '',
+                    endDate: '',
+                    name: '',
+                    summarize: ''
+                };
+                this.cvTraVisible = true;
+            },
+            openTraUp(row) {
+                this.fm_tra = row;
+                this.cvTraVisible = true;
+            },
+            // 荣誉
+            openHonIn() {
+                this.fm_hon = {
+                    awardTime: '',
+                    name: '',
+                    certificateUrl: ''
+                };
+                this.cvHonVisible = true;
+            },
+            openHonUp(row) {
+                this.fm_hon = row;
+                this.cvHonVisible = true;
+            },
+            //数据提交
+            saveBase() {
+                let t = this;
+                // 封装了提交参数
+                let param = {
+                    id: t.cvid,
+                    gender: t.cv_base.gender,
+                    name: t.cv_base.name,
+                    birthday: t.cv_base.birthday,
+                    nation: t.cv_base.nation,
+                    politicsStatus: t.cv_base.politicsStatus,
+                    maritalStatus: t.cv_base.maritalStatus,
+                    degree: t.cv_base.degree,
+                    major: t.cv_base.major,
+                    academy: t.cv_base.academy,
+                    mobile: t.cv_base.mobile,
+                    email: t.cv_base.email,
+                    address: t.cv_base.address
+                }
+                console.log("param:" + param);
+                console.log(param);
+
+                axios.put("/cv/base", param).then(resp => {
+                    console.log(resp);
+                    if (resp.data.code == 200) {
+                        t.$message.success(resp.data.message);
+                        t.cvBaseVisible = false;
+                    } else {
+                        t.$message.error(resp.data.message);
+                    }
+
+                });
+            },
+            //保存期望
+            saveDesired() {
+                let t = this;
+                let param = {
+                    id: t.cvid,
+                    desiredSalary: t.cv_desired.desiredSalary * 100,
+                    desiredPlace: t.cv_desired.desiredPlace,
+                    desiredDirection: t.cv_desired.desiredDirection,
+                    desiredStatus: t.cv_desired.desiredStatus
+                }
+                console.log("param:");
+                console.log(param);
+                axios.put("/cv/desired", param).then(resp => {
+                    console.log(resp);
+                    if (resp.data.code == 200) {
+                        t.$message.success(resp.data.message);
+                        t.cvDesiredVisible = false;
+                    } else {
+                        t.$message.error(resp.data.message);
+                    }
+                });
+            },
+            saveExp() {//保存工作经验
+                let t = this;
+                let param = t.fm_exp;
+                param.cvId = t.cvid;
+                console.log("param:");
+                console.log(param);
+                t.saveInfo("/experience", param);
+            },
+            savePro() {//保存项目经历
+                let t = this;
+                let param = t.fm_pro;
+                param.cvId = t.cvid;
+                console.log("param:");
+                console.log(param);
+                t.saveInfo("/project", param);
+            },
+            saveEdu() {//教育
+                let t = this;
+                let param = t.fm_edu;
+                param.cvId = t.cvid;
+                console.log("param:");
+                console.log(param);
+                t.saveInfo("/education", param);
+            },
+            saveTra() {//培训
+                let t = this;
+                let param = t.fm_tra;
+                param.cvId = t.cvid;
+                console.log("param:");
+                console.log(param);
+                console.log("param:" + param);
+                t.saveInfo("/training", param);
+            },
+            saveHon() {//荣誉
+                let t = this;
+                let param = t.fm_hon;
+                param.cvId = t.cvid;
+                console.log("param:");
+                console.log(param);
+                t.saveInfo("/honor", param);
+            },
+            // 抽取公共方法 --
+            saveInfo(url, param) {
+                /**
+                 * 当用户点击确定提交
+                 *  接收到保存的参数
+                 *      我们可以根据 当前参数 id 是否存在，来判断
+                 *          用户的操作是 新增、还是修改
+                 * @type {methods}
+                 */
+                let t = this;
+                if (!param.id) {
+                    //添加
+                    //新增
+                    axios.post(url, param).then(resp => {
+                        t.$message(resp.data.message);
+                        //重新获取页面展示的数据
+                        t.getData();
+                        t.cvHonVisible = false;
+                        t.cvTraVisible = false;
+                        t.cvEduVisible = false;
+                        t.cvProVisible = false;
+                        t.cvExpVisible = false;
+                        t.cvRecVisible = false;
+                    });
+                } else {
+                    //修改
+                    axios.put(url, param).then(resp => {
+                        t.$message(resp.data.message);
+                        //重新获取页面展示的数据
+                        t.getData();
+                        t.cvHonVisible = false;
+                        t.cvTraVisible = false;
+                        t.cvEduVisible = false;
+                        t.cvProVisible = false;
+                        t.cvExpVisible = false;
+                        t.cvRecVisible = false;
+                    });
+                }
+            },
+            deleteInfo(url, id) {
+                let t = this;
+                this.$confirm('此操作将永久删除该记录, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    console.log("url=" + url);
+                    console.log("id=" + id);
+                    console.log("最终访问地址=" + url + "/" + id);
+                    axios.delete(url + "/" + id).then(resp => {
+                        t.$message(resp.data.message);
+                        //重新获取页面展示的数据
+                        t.getData();
+                    });
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
+                });
+            },
+            closeVisible() {
+                this.cvBaseVisible = false;
+                this.cvDesiredVisible = false;
+                this.cvExpVisible = false;
+                this.cvEduVisible = false;
+                this.cvProVisible = false;
+                this.cvTraVisible = false;
+                this.cvHonVisible = false;
+                this.cvRecVisible = false;
+            },
+            //日期转年龄
+            getAge(strBirthday) {
+                if (!strBirthday) {
+                    return -1
+                }
+                var returnAge;
+                var strBirthdayArr = strBirthday.split("-");
+                var birthYear = strBirthdayArr[0];
+                var birthMonth = strBirthdayArr[1];
+                var birthDay = strBirthdayArr[2];
+
+                d = new Date();
+
+                var nowYear = d.getYear() + 1900;
+                var nowMonth = d.getMonth() + 1;
+                var nowDay = d.getDate();
+
+                if (nowYear == birthYear) {
+                    returnAge = 0;//同年 则为0岁
+                } else {
+                    var ageDiff = nowYear - birthYear; //年之差
+                    if (ageDiff > 0) {
+                        if (nowMonth == birthMonth) {
+                            var dayDiff = nowDay - birthDay;//日之差
+                            if (dayDiff < 0) {
+                                returnAge = ageDiff - 1;
+                            } else {
+                                returnAge = ageDiff;
+                            }
+                        } else {
+                            var monthDiff = nowMonth - birthMonth;//月之差
+                            if (monthDiff < 0) {
+                                returnAge = ageDiff - 1;
+                            } else {
+                                returnAge = ageDiff;
+                            }
+                        }
+                    } else {
+                        returnAge = -1;//返回-1 表示出生日期输入错误 晚于今天
+                    }
+                }
+
+                return returnAge;//返回周岁年龄
+
+            },
+            handleAvatarSuccess(res, file) {
+                console.log("返回结果：");
+                console.log(res);
+                this.fm_hon.certificateUrl = res.data;
+            },
+            beforeAvatarUpload(file) {
+                const isJPG = file.type === 'image/jpeg';
+                const isLt2M = file.size / 1024 / 1024 < 2;
+
+                if (!isJPG) {
+                    this.$message.error('上传图片只能是 JPG 格式!');
+                }
+                if (!isLt2M) {
+                    this.$message.error('上传图片大小不能超过 2MB!');
+                }
+
+                return isJPG && isLt2M;
+            },
+            changeStatus(val) {
+                //  val 改变后的值
+                let t = this;
+                let param = {
+                    id: t.id,
+                    status: val
+                }
+                axios.put("/cv/status/", param).then(resp => {
+                    this.$message(resp.data.message);
+                });
+            },
+            handleCommand(command) {
+                if ("logout" === command) {
+                    this.logout();
+                }
+            },
+            logout() {
+                let t = this;
+                this.$confirm('确认退出系统?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'danger'
+                }).then(() => {
+                    t.$message.success("退出成功");
+                    sessionStorage.clear();
+                    window.location.href = "/";
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
+                });
+            },
+            searchKey() {
+                window.location.href = "/page/main.html?key=" + this.key;
+            }
+
+        }
+    })
+
+</script>
+
+</html>

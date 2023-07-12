@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhiku.resumeapp.dao.CvDao">
+
+
+    <select id="selectCvByStatus" resultType="com.zhiku.resumeapp.entity.Cv">
+        select id,name,degree,desired_salary,desired_place,desired_direction,desired_status
+        from `cv`
+        where status = #{status}
+    </select>
+
+    <select id="selectCv" resultType="com.zhiku.resumeapp.entity.Cv">
+        select id,name,degree,desired_salary,desired_place,desired_direction,desired_status
+        from `cv`
+        where status = #{status}
+        and (desired_direction like CONCAT('%',#{keywords},'%')
+        or desired_place like CONCAT('%',#{keywords},'%'))
+    </select>
+
+    <select id="selectCvByIds" resultType="com.zhiku.resumeapp.entity.Cv">
+        select id,name,degree,desired_salary,desired_place,desired_direction,desired_status
+        from `cv`
+        where status = 1
+        <if test="cvIds!=null and cvIds.size()>0">
+            and id in
+            <foreach collection="cvIds" item="cvId" open="(" close=")" separator=",">
+                #{cvId}
+            </foreach>
+            and status = 1
+        </if>
+    </select>
+
+    <select id="selectById" resultType="com.zhiku.resumeapp.entity.Cv">
+        select *
+        from cv
+        where id = #{id}
+    </select>
+
+    <insert id="insertEmptyCv">
+        insert into cv(member_id) values (#{memberId})
+    </insert>
+
+    <select id="selectByMemberId" resultType="java.lang.Integer">
+        select id from cv where member_id = #{memberId}
+    </select>
+
+    <update id="updateBase">
+        update `cv`
+        set
+        name = #{name},
+        gender = #{gender},
+        birthday = #{birthday},
+        nation = #{nation},
+        address = #{address},
+        email = #{email},
+        mobile = #{mobile},
+        politics_status = #{politicsStatus},
+        marital_status = #{maritalStatus},
+        academy = #{academy},
+        major = #{major},
+        degree = #{degree}
+        where
+        id = #{id}
+    </update>
+
+    <update id="updateDesired">
+        update cv
+        set
+        desired_salary=#{desiredSalary},
+        desired_place=#{desiredPlace},
+        desired_direction=#{desiredDirection},
+        desired_status=#{desiredStatus}
+        where
+        id = #{id}
+    </update>
+</mapper>

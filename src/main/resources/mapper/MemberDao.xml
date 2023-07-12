@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.zhiku.resumeapp.dao.MemberDao">
+
+    <select id="selectByUsername" resultType="com.zhiku.resumeapp.entity.Member">
+        select * from member where usname = #{username}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into `member`(usname, psword, pet_name, avatar_url, email, mobile, create_time)
+        VALUES (#{usname},#{psword},#{petName},#{avatarUrl},#{email},#{mobile},NOW())
+    </insert>
+</mapper>
